@@ -1,0 +1,39 @@
+<html>
+  <head> </head>
+  <body>
+    <h3 id="greet"></h3>
+    <div id="form">
+      請選擇語言
+      <select name="" id="langs">
+        <option value="cn">中文</option>
+        <option value="en">英文</option>
+        <option value="es">西班牙</option>
+      </select>
+      <br />
+      是否啟用正式招呼法
+      <select name="" id="formal">
+        <option value="1">是</option>
+        <option value="0">否</option>
+      </select>
+      <br />
+      <button id="btn">送出</button>
+    </div>
+
+    <!-- jquery -->
+    <script
+      src="https://code.jquery.com/jquery-1.12.4.min.js"
+      integrity="sha256-ZosEbRLbNQzLpnKIkEdrPv7lOy9C27hHQ+Xp8a4MxAQ="
+      crossorigin="anonymous"
+    ></script>
+    <!-- 參考 jquery 建立的“打招呼”迷你框架 -->
+    <script src="myGreetr.js"></script>
+    <!-- 執行代碼 -->
+    <script>
+      $("#btn").click(function () {
+        var lang = $("#langs").val();
+        var isF = $("#formal").val();
+        _G("Amy", "Doe", lang).HTMLGreeting("#greet", isF);
+      });
+    </script>
+  </body>
+</html>
