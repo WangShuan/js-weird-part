@@ -1,66 +1,89 @@
-# js-deep
+# 克服 JS 的奇怪部分
 
-## js 是單執行緒 且同步執行的
+## 你要先知道的事
 
-## 全域物件 vs `this`
+JS 是單執行緒且同步執行的
 
-當你通過瀏覽器打開一個 `html` 並且裡面引入一個完全空白的 js
+- 單執行緒：一次執行一個指令的意思
+- 同步：`one at a time` 程式碼會依照出現順序一次執行一行
 
-你會發現 js 幫你生成了兩個東西
+**這表示在 JavaScript 中一次只會發生一件事，且是按照順序，一件事做完才做下一件。**
+
+看完你可能會想問，那為什麼 JS 中還會有非同步事件？
+這是因為 JavaScript 能夠利用事件佇列，與瀏覽器中的其他引擎互相溝通、分工合作，利用同步去達到非同步的效果，使得非同步成為 JS 的特色。
+詳細的說明就繼續往下看吧！
+
+
+## part1 - 全域物件 vs `this`
+
+當你通過瀏覽器打開一個 `html` 並且裡面引入一個完全空白的 JS
+
+你會發現 JS 幫你生成了兩個東西
 
 - 全域物件: 如果你用瀏覽器開啟 該全域物件即是 `window`
 
 - `this`: 全域物件本身
 
-## 變量與函數
+## part2 - 變數與函數
 
-當變量與函數不是寫在某個函數中時 該變量與函數就是全域物件
+當變數與函數不是寫在某個函數中時 該變數與函數就是全域物件
 
 比如我們創建一個變數 a 與一個函數 b 並且變數與函數都沒有寫在其他函數中
 
 這時候你打開瀏覽器的 `Console` 即會發現 `window` 這個全域物件中多了變數 a 與函數 b
 
-並且你可以通過 `console.log(a, b)` 或 `console.log(window.a, window.b)` 來得到該值
+並且你可以通過 `console.log(a, b)` 或 `console.log(window.a, window.b)` 來得到該值 這就是所謂的全域物件。
 
-## 執行過程
+## part3 - 執行過程
 
-js 在執行代碼時 不是把所有代碼都直接通過電腦去執行 而是會先把代碼編譯成電腦能理解的東西
+JS 在執行代碼時 不是把所有代碼都直接通過電腦去執行 而是會先把代碼編譯成電腦能理解的東西
 
 在編譯的時候 代碼中的變數與函數會先被記憶體預留空間 而函數會整個被保存在記憶體 變數則是給予預設值 `undefined`
 
 於是當我們的代碼順序是先執行函數後定義函數時 就會發現函數是可以被執行調用的
 
-但變數如果先定義後獲取 則是會給出 `undefined` 這個值（記憶體中預設的值）
+但變數如果先獲取後定義 則是會給出 `undefined` 這個值（記憶體中預設的值）
 
-該執行過程被稱為`提升(hoisting)`
+參考代碼如下：
+```javascript=
+myFn(); // 可以被執行 會輸出 123，這裡表示 myFn 已經被保留在記憶體，只要有創造該函數，即可被調用，不論順序
+function myFn(){
+    console.log(123);
+}
 
-- 因為在 js 執行的過程中 會先編譯你所寫的代碼 而編譯的過程會先在記憶體儲存變量/函數的空間 所以不會出現 `is not defined` 的錯誤 (該提示是在這個變量完全沒有被定義的情況下才會出現)
+console.log(a); // 會輸出 undefined，這裏表示 a 已經被保留在記憶體，只是賦值的部分並不會跟著被提升，所以會輸出預設值 undefined undefined
+var a = 3;
+```
 
-- 變量的賦值會在儲存至記憶體後 才開始執行 導致當代碼的順序是先獲取變數定義的值 再給變數賦值時 獲取到的結果是一開始在記憶體中預設的值 `undefined`
+以上的執行過程就被稱為`提升(hoisting)`
 
-- 所以我們在撰寫 js 代碼時盡量不要依賴`提升(hoisting)`的行為 而是應該先設定好變數與函數後 再執行獲取/調用的動作
+- 因為在 JS 執行的過程中 會先編譯你所寫的代碼 而編譯的過程會先在記憶體儲存變數/函數的空間 所以不會出現 `is not defined` 的錯誤 (該提示是在這個變數完全沒有被定義的情況下才會出現)
 
-## `undefined`
+- 變數的賦值會在儲存至記憶體後 才開始執行 導致當代碼的順序是先獲取變數定義的值 再給變數賦值時 獲取到的結果是一開始在記憶體中預設的值 `undefined`
+
+- 所以我們在撰寫 JS 代碼時盡量不要依賴`提升(hoisting)`的行為 而是應該先設定好變數後 再執行獲取的動作
+
+## part4 - `undefined`
 
 當一個變數被賦值 但執行的過程是先獲取該變數後才給予值時 該獲取到的值就會是 `undefined`
 
 原因是在創造 js 執行環境的過程中我們會先給該變數保留一個記憶體空間 並給它預設值 `undefined`
 
-這個 `undefined` 並不是字符串 而是 js 的關鍵字 它所代表的意思是 `該變量沒有被設定值`
+這個 `undefined` 並不是字符串 而是 js 的關鍵字 它所代表的意思是 `該變數沒有被設定值`
 
-這是 js 在執行環境的創造過程中幫我們設定的值 讓我們在看到該關鍵字時 可以馬上知道該變量沒有被設定值
+這是 js 在執行環境的創造過程中幫我們設定的值 讓我們在看到該關鍵字時 可以馬上知道該變數沒有被設定值
 
-並且 在一個變數沒有被賦值 僅僅只是被定義的時候 該變量的值也會是 `undefined`
+並且 在一個變數沒有被賦值 僅僅只是被定義的時候 該變數的值也會是 `undefined`
 
-- `undefined` 代表的是`該變量存在但是沒有賦值`
+- `undefined` 代表的是`該變數存在但是沒有賦值`
 
-- `變量 is not defined` 則是該變量沒有被定義過 (即該變量它`完全不存在`)
+- `變數 is not defined` 則是該變數沒有被定義過 (即該變數它`完全不存在`)
 
-- `理論上`是可以`手動`將一個變量賦值為`undefined`的 **_但建議最好不要這樣做_**
+- `理論上`是可以`手動`將一個變數賦值為`undefined`的 **_但建議最好不要這樣做_**
 
-- 當你想給一個變量定義為沒有值時 建議使用 `null` (訴求是讓`undefined`始終為 js 的預設值 比較好 debug)
+- 當你想給一個變數定義為沒有值時 建議使用 `null` (訴求是讓`undefined`始終為 js 的預設值 比較好 debug)
 
-## 函數與執行堆
+## part5 - 函數與執行堆
 
 當一個函數被呼叫或調用的時候 就會產生一個執行堆
 
@@ -80,21 +103,21 @@ c. 發現函數 1 調用了函數 2 所以再在函數 1 的執行堆上面創�
 
 如果函數 1 沒有其他操作了 就再往下執行全域環境的代碼
 
-## 函數、環境與變數環境
+## part6 - 函數、環境與變數環境
 
-在函數中聲明的變量僅會在自己的函數環境中有效
+在函數中聲明的變數僅會在自己的函數環境中有效
 
-假設有一個全域變量 `var a = 1` 在函數 a 中又聲明了 `var a = 0`
+假設有一個全域變數 `var a = 1` 在函數 a 中又聲明了 `var a = 0`
 
 當函數 a 執行完畢後 在全域環境中 `console.log(a)`
 
-變量 a 的結果並不會受到函數 a 影響 而依然會是全域變量的 `1`
+變數 a 的結果並不會受到函數 a 影響 而依然會是全域變數的 `1`
 
-即 每個執行堆裡面的變量 並`不會`互相影響 它們都是`獨立存在`於該執行環境(`執行堆`)中的
+即 每個執行堆裡面的變數 並`不會`互相影響 它們都是`獨立存在`於該執行環境(`執行堆`)中的
 
 參考代碼如下:
 
-```js
+```javascript=
 function b() {
   var myVar;
   console.log(myVar); // 它在自己的執行堆中是默認值 `undefined` 所以輸出結果也是 `undefined`
@@ -112,13 +135,13 @@ a();
 console.log(myVar); // 1 全域
 ```
 
-## 範圍鏈
+## part7 - 範圍鏈
 
 在函數中如果你查找了某個完全沒有在函數中被定義的變數 會有幾種情況
 
 - 情境 1 - 函數外層沒有被其他函數包覆:
 
-```js
+```javascript=
 function b() {
   console.log(myVar); // 輸出結果 myVar 為 1
 }
@@ -142,11 +165,11 @@ a();
 
 - 情境 2 - 函數的外部有被其他函數包住:
 
-函數 b 中沒有`myVar`這個變量 所以往外參考包住它的函數 a
+函數 b 中沒有`myVar`這個變數 所以往外參考包住它的函數 a
 
-當函數 a 有`myVar`這個變量時 輸出結果就是 `myVar = 2` 如下:
+當函數 a 有`myVar`這個變數時 輸出結果就是 `myVar = 2` 如下:
 
-```js
+```javascript=
 function a() {
   function b() {
     console.log(myVar); // 參考外部的函數 a 所以結果是 2
@@ -159,11 +182,11 @@ var myVar = 1;
 a();
 ```
 
-但如果函數 a 裡面也沒有變數`myVar`, 函數 b 就會再繼續找到全域中的變量(因為函數 a 的外部參照是全域)
+但如果函數 a 裡面也沒有變數`myVar`, 函數 b 就會再繼續找到全域中的變數(因為函數 a 的外部參照是全域)
 
-所以如果函數 a 與函數 b 都沒有聲明過這個變量`myVar` 就會輸出全域中的變量`myVar = 1`
+所以如果函數 a 與函數 b 都沒有聲明過這個變數`myVar` 就會輸出全域中的變數`myVar = 1`
 
-```js
+```javascript=
 function a() {
   function b() {
     console.log(myVar); // 參考外部的函數 a 但函數 a 也沒有 就參考函數 a 的外部全域 所以結果是 1
@@ -175,7 +198,7 @@ var myVar = 1;
 a();
 ```
 
-## js 的非同步處理
+## part8 - js 的非同步處理
 
 前面說過 js 是單執行緒加同步處理
 
@@ -193,7 +216,7 @@ a();
 
 可參考下方代碼:
 
-```js
+```javascript=
 // 強制讓 js 三秒後再開始執行
 function waitThreeSeconds() {
   var ms = 3000 + new Date().getTime();
@@ -224,7 +247,7 @@ console.log("finished execution");
 
 所以 `click` 事件永遠在最後才執行
 
-## js 的六種純值(基本型別)類型
+## part9 - js 的六種純值(基本型別)類型
 
 1. `undefined` : 表示該變數`沒有被賦值過`的預設值
 
@@ -238,7 +261,7 @@ console.log("finished execution");
 
 6. `symbol` : 符號， `ES6` 版本出現的
 
-## 運算子
+## part10 - 運算子
 
 運算子其實也是一個函數 該函數會將兩個值傳入並返回一個值 而運算子的函數通常使用中綴表示法
 
@@ -254,11 +277,11 @@ console.log("finished execution");
 
 `console.log(a = b = c)` 結果就是 `3`
 
-## js 中的強制轉換型別
+## part11 - js 中的強制轉換型別
 
 舉例:
 
-```js
+```javascript=
 console.log(1 < 2 < 3); // 結果為 true
 
 console.log(3 < 2 < 1); // 結果為 true
@@ -290,7 +313,7 @@ console.log(3 < 2 < 1); // 結果為 true
 
 - 補充: 在 `ES6` 中還新增了幾種精確度比三等於更高的方法 這裏暫時不說
 
-## 框架
+## part12 - 框架
 
 假設你在檔案中引入了兩個框架 且兩個框架中都存在同一個名稱的東西 此時執行後可能會造成`命名衝突`
 
@@ -306,7 +329,7 @@ console.log(3 < 2 < 1); // 結果為 true
 
 所以可以通過 `window.xxx = window.xxx || newValue` 來處理衝突問題 這是在檢查全域命名空間
 
-## 物件與函數
+## part13 - 物件與函數
 
 首先 對 js 而言 物件與函數在很多情況下其實是幾乎一樣的
 
@@ -314,7 +337,7 @@ console.log(3 < 2 < 1); // 結果為 true
 
 甚至可以是方法(在物件中的函數即被稱為方法)
 
-## 物件中的成員取用方式
+## part14 - 物件中的成員取用方式
 
 物件可以通過`中括號`來添加/獲取某屬性 如 `name['firstname']`
 
@@ -334,7 +357,7 @@ console.log(3 < 2 < 1); // 結果為 true
 
    括弧記法傳入變數的方式為:
 
-   ```js
+   ```javascript=
    var name = new Object();
    var first = "firstname";
 
@@ -347,9 +370,9 @@ console.log(3 < 2 < 1); // 結果為 true
 
 2. 括弧記法中傳入屬性名時需要加上引號 將字符串包裹住 但點記法則必須省略引號
 
-## 創建物件的方式
+## part15 - 創建物件的方式
 
-創建物件 除了通過聲明變量為 `new Object()` 的方式外
+創建物件 除了通過聲明變數為 `new Object()` 的方式外
 
 還可以通過花括號來創建物件 該方法叫做`物件實體語法`
 
@@ -373,9 +396,9 @@ console.log(3 < 2 < 1); // 結果為 true
 
 比如可以在函數傳參的位置中 直接通過物件實體語法創建一個新物件 也可以在點記法設定屬性值的時候使用等
 
-## 命名空間
+## part16 - 命名空間
 
-在程式語言中 命名空間就是一個用來存放變數與函式的容器
+在程式語言中 命名空間就是一個用來存放變數與函數的容器
 
 但 js 沒有命名空間 這是由於物件的本質
 
@@ -383,7 +406,7 @@ console.log(3 < 2 < 1); // 結果為 true
 
 比如:
 
-```js
+```javascript=
 var greet = "hi";
 var greet = "hola";
 console.log(greet); // greet 重名所以被取代 輸出結果為 hola
@@ -392,7 +415,7 @@ var S = { greet: "hole" };
 console.log(E.greet, S.greet); // greet 各自被物件包裹 所以獨立存在 輸出結果為 hi, hola
 ```
 
-## JSON
+## part17 - JSON
 
 `JSON` 是指`物件表示法` 它是被物件實體語法所啟發而產生的一種資料傳輸格式
 
@@ -404,12 +427,12 @@ JSON 對語法的要求很嚴謹 它規定所有除了布爾值與數字外的�
 
 另外 js 中提供了兩種方便操作 JOSN 的方法
 
-```js
+```javascript=
 JSON.stringify(); // 將傳入的值轉換為 JSON 格式
 JSON.parse(); // 將傳入的 JSON 數據轉換為物件
 ```
 
-## 函數即是物件
+## part18 - 函數即是物件
 
 在 js 中 函數其實是一個物件 該物件中包含 `屬性` `方法` `名稱` 與 `程式碼`
 
@@ -423,7 +446,7 @@ JSON.parse(); // 將傳入的 JSON 數據轉換為物件
 
 你也可以理解為函數只是程式碼的容器 並且它是一個物件 這讓你可以在任何地方使用它
 
-## 函數陳述句與函數表示式
+## part19 - 函數陳述句與函數表示式
 
 函數陳述句 是指這個函數不會回傳任何東西 而是做其他事 如 `if(...){...}` 就是函數陳述句
 
@@ -435,7 +458,7 @@ JSON.parse(); // 將傳入的 JSON 數據轉換為物件
 
 參考代碼如下:
 
-```js
+```javascript=
 greet();
 
 // 這是陳述句 它會被存在記憶體中 所以可以直接調用該函數後再定義
@@ -459,7 +482,7 @@ greetFn();
 
 參考代碼如下:
 
-```js
+```javascript=
 // a = 傳入的 `function () { console.log(123); }`
 function log(a) {
   a();
@@ -470,7 +493,7 @@ log(function () {
 });
 ```
 
-## 傳值與傳參考
+## part20 - 傳值與傳參考
 
 當兩個變數被指向同一個值 其實是拷貝了記憶體位置的值 所以這兩個變數都是獨立的 這就是傳值
 
@@ -478,7 +501,7 @@ log(function () {
 
 代碼如下:
 
-```js
+```javascript=
 var a = { greet: "hi" };
 var b = a; // 指向同一個物件 { greet: "hi" } 的記憶體位置
 
@@ -486,7 +509,7 @@ console.log(a);
 console.log(b);
 // 結果都是 { greet: "hi" }
 
-// 這個函式改變了傳入物件的屬性值
+// 這個函數改變了傳入物件的屬性值
 function changeG(obj) {
   obj.greet = "hola";
 }
@@ -507,7 +530,7 @@ console.log(b);
 // 所以結果變成 a => { greet: "hi" }, b => { greet: "hola" }
 ```
 
-## 函數中的 `this` 關鍵字
+## part21 - 函數中的 `this` 關鍵字
 
 在普通函數中的 `this` 會指向全域物件 在物件中的函數(又稱方法) 則指向整個物件
 
@@ -517,7 +540,7 @@ console.log(b);
 
 舉例如下:
 
-```js
+```javascript=
 var a = function () {
   console.log(this);
 };
@@ -528,7 +551,7 @@ function b() {
 b(); // this 為全域物件的 window
 ```
 
-```js
+```javascript=
 var c = {
   name: "object C",
   log: function () {
@@ -547,7 +570,7 @@ var c = {
 c.log();
 ```
 
-```js
+```javascript=
 var c = {
   name: "object C",
   log: function () {
@@ -567,19 +590,19 @@ var c = {
 c.log();
 ```
 
-## 陣列
+## part22 - 陣列
 
 在 js 中陣列可以是任何東西的集合
 
 要創建一個陣列可以通過 `new Array()` 的方法 也可以直接寫 `[]`
 
-我們也可以通過 `arr[index]` 來獲取陣列中的某個值( index 為下標 是指處於陣列中的位置減 1)
+我們也可以通過 `arr[index]` 來獲取陣列中的某個值( index 為索引值 是指處於陣列中的位置減 1)
 
 並且陣列中的內容可以是任何值 不需要讓每個值的類型都是一樣的
 
 如:
 
-```js
+```javascript=
 var arr = [
   1,
   "I am string",
@@ -593,7 +616,7 @@ arr[3].firstname = "Joe"; // arr[3] 取得陣列中的物件 並將物件的 fir
 arr[4](); // arr[4] 定位到陣列中的函數 並使用 `()` 來調用該函數
 ```
 
-## js 中的函式過載（Function overloading）
+## part23 - js 中的函數過載（Function overloading）
 
 過載(又稱重載)可以理解成 同一個函數名稱 傳入不同個數的參數時執行不同程式碼
 
@@ -611,7 +634,7 @@ arr[4](); // arr[4] 定位到陣列中的函數 並使用 `()` 來調用該函�
 
 另外在 `ES6` 中提供了一個展開運算子(spread)為 `...` 它有許多種用法
 
-這裡先說它用在函式的時候 我們可以在參數的地方添加一個 `...others`
+這裡先說它用在函數的時候 我們可以在參數的地方添加一個 `...others`
 
 假設在函數中原本我們只能傳三個參數 當使用了展開運算子後 我們在執行函數的地方就可以帶入不只三個參數
 
@@ -619,7 +642,7 @@ arr[4](); // arr[4] 定位到陣列中的函數 並使用 `()` 來調用該函�
 
 代碼如下:
 
-```js
+```javascript=
 function test(num1, num2, num3, ...others) {
   if (arguments.length === 0) {
     console.log("你沒有傳入任何參數");
@@ -645,7 +668,7 @@ test(6, 7, 13); // 輸出結果為 26
 test(1, 2, 3, "a", "b", "c"); // 輸出結果為 ["a", "b", "c"]
 ```
 
-## 分號
+## part24 - 分號
 
 在 js 的語法解析器中 它會在看到換行時給出一個符號 並且 js 會自動把這個符號判定為這裡需要加上分號的意思
 
@@ -657,7 +680,7 @@ test(1, 2, 3, "a", "b", "c"); // 輸出結果為 ["a", "b", "c"]
 
 所以在撰寫代碼時要留意使用分號與使用換行的時機
 
-## 立即呼叫的函數表示式(IIFE)
+## part25 - 立即呼叫的函數表示式(IIFE)
 
 當我們創造函數後 都是通過`()` 調用執行函數的
 
@@ -667,7 +690,7 @@ test(1, 2, 3, "a", "b", "c"); // 輸出結果為 ["a", "b", "c"]
 
 首先 假設我有一個變數 值指向一個函數 正常情況下是這樣的:
 
-```js
+```javascript=
 var greet = function (name) {
   console.log(name);
 };
@@ -677,7 +700,7 @@ console.log(greet); // 結果會是整個函數
 
 當我想在創建函數時立即執行的話我可以這麼做:
 
-```js
+```javascript=
 var greet = (function (name) {
   console.log(name);
 })("Andy");
@@ -712,7 +735,7 @@ console.log(greet); // 結果為 'Andy' 這是因為它把立即執行的函數�
 
 代碼如下:
 
-```js
+```javascript=
 // 這是會報錯的寫法
 function(name){
   console.log(name)
@@ -728,7 +751,7 @@ function(name){
 
 方法如下:
 
-```js
+```javascript=
 (function (name) {
   console.log(name);
 })("Joe");
@@ -736,7 +759,7 @@ function(name){
 
 或
 
-```js
+```javascript=
 (function (name) {
   console.log(name);
 })("Joe");
@@ -750,7 +773,7 @@ function(name){
 
 這是為了避免自己在看代碼時不懂為何這邊放裡面那邊放外面 兩者有什麼差別之類的困惑
 
-## 閉包
+## part26 - 閉包
 
 閉包是函數記得並存取外部參考的參數的能力 當函數是在其宣告的參數之外的地方執行時 也能正常運作 並獲取到外部函數的參數
 
@@ -758,7 +781,7 @@ function(name){
 
 請參考以下代碼:
 
-```js
+```javascript=
 function a(name) {
   return function (age) {
     console.log("I'm " + name + ", " + age + " years old.");
@@ -768,7 +791,7 @@ function a(name) {
 // 執行方式1 我們直接在調用 a 函數後繼續調用內部函數
 a("Joe")(18);
 
-// 執行方式2 我們定義一個變量 j 來接收 a 函數返回的內部函數
+// 執行方式2 我們定義一個變數 j 來接收 a 函數返回的內部函數
 var j = a("Joe");
 // 然後調用 j
 j(18);
@@ -786,7 +809,7 @@ j(18);
 
 假設你想在迴圈中獲取到某個特定值 你可能會像這樣做:
 
-```js
+```javascript=
 var arr = [];
 function getArr() {
   for (var i = 0; i < 3; i++) {
@@ -816,7 +839,7 @@ arr[2](); // 3
 
 正確符合預期的執行方式應該這樣:
 
-```js
+```javascript=
 var arr = [];
 function getArr() {
   for (var i = 0; i < 3; i++) {
@@ -844,7 +867,7 @@ arr[2]();
 
 而閉包會幫我們把 num 保存下來 所以 num 分別為 0 1 2
 
-## 使用閉包特性創建一個函數工廠
+## part27 - 使用閉包特性創建一個函數工廠
 
 舉例來說 我們先創建一個叫工廠的函數(factory) 參數為物品(thing)
 
@@ -854,9 +877,9 @@ arr[2]();
 
 是手機則返回一個內部函數 參數為號碼(number) 用來 log 號碼
 
-接著我們跳出工廠函數的內部 回到全域中 定義變量為新的函數名稱
+接著我們跳出工廠函數的內部 回到全域中 定義變數為新的函數名稱
 
-以例子而言我定義一個變量為獲取車名(getCarName) 另一個為獲取號碼(getNumber)
+以例子而言我定義一個變數為獲取車名(getCarName) 另一個為獲取號碼(getNumber)
 
 最後我就可以直接通過 `getCarName(name)` 來取代 `factory('car')(name)`
 
@@ -864,7 +887,7 @@ arr[2]();
 
 代碼如下:
 
-```js
+```javascript=
 function factory(thing) {
   if (thing === "car") {
     return function (name) {
@@ -887,7 +910,7 @@ getNumber("0912-123-123");
 
 以上就是利用閉包設定預設的參數 並且創造變數接收 並用該變數來調用執行特定方法
 
-## 回呼(callback)
+## part28 - 回呼(callback)
 
 回呼的意思是 一個函數中傳入另一個函數 並在該函數執行完畢後呼叫傳入的函數
 
@@ -901,7 +924,7 @@ getNumber("0912-123-123");
 
 如下:
 
-```js
+```javascript=
 // setTimeout 加閉包, 在 setTimeout 中 num 就是通過閉包獲取的
 function tryLater() {
   var num = 2;
@@ -924,7 +947,7 @@ testcb(function () {
 });
 ```
 
-## bind() , call() , apply()
+## part29 - bind() , call() , apply()
 
 這是函數中設定 `this` 關鍵字的幾種方法 任何函數都可以使用
 
@@ -932,7 +955,7 @@ testcb(function () {
 
 參考代碼如下:
 
-```js
+```javascript=
 var person = {
   firstname: "Joe",
   lastname: "Doe",
@@ -960,7 +983,7 @@ bindLogName(); // 這個就能正確執行 person.getName()
 
 參考代碼如下:
 
-```js
+```javascript=
 var person = {
   firstname: "Joe",
   lastname: "Doe",
@@ -982,7 +1005,7 @@ logName.call(person,'I am A','I am B'); // 第一個參數指向 this 其他依�
 
 參考如下:
 
-```js
+```javascript=
 var person = {
   firstname: "Joe",
   lastname: "Doe",
@@ -1000,7 +1023,7 @@ var logName = function (a, b) {
 logName.call(person,['I am A','I am B']); // 把所有參數改為一個陣列傳入 即可
 ```
 
-## 函數借用
+## part30 - 函數借用
 
 我們可以通過 `call()` 或 `apply()` 來借用別人的函數
 
@@ -1008,7 +1031,7 @@ logName.call(person,['I am A','I am B']); // 把所有參數改為一個陣列�
 
 方法如下:
 
-```js
+```javascript=
 var person1 = {
   firstname: "Joe",
   lastname: "Doe",
@@ -1026,7 +1049,7 @@ console.log(person1.getName.call(person2)); // Andy Wu
 console.log(person1.getName.apply(person2)); // Andy Wu
 ```
 
-## currying function
+## part31 - currying function
 
 我們可以通過 `bind()` 來 柯理化函數
 
@@ -1038,7 +1061,7 @@ console.log(person1.getName.apply(person2)); // Andy Wu
 
 如下:
 
-```js
+```javascript=
 function x(num1, num2) {
   return num1 * num2;
 }
@@ -1051,18 +1074,18 @@ var x3and6 = x.bind(this, 3, 6);
 console.log(x3and6()); // 18
 ```
 
-## 函數程式設計
+## part32 - 函數程式設計
 
 這是用前面所學的技巧做出簡潔有力的程式設計 可參考 `lodash.js` 或 `underscore.js`
 
-舉例來說 我們以某數組為基準 傳入不同函數以創建新的數組 並且通過前面所學 來將代碼做更簡潔的使用
+舉例來說 我們以某陣列為基準 傳入不同函數以創建新的陣列 並且通過前面所學 來將代碼做更簡潔的使用
 
 如下:
 
-```js
-var arr1 = [1, 2, 3]; // 基準數組
+```javascript=
+var arr1 = [1, 2, 3]; // 基準陣列
 
-// 創建新數組的函數方法
+// 創建新陣列的函數方法
 function mapArr(arr, fn) {
   var newArr = [];
   for (var i = 0; i < arr.length; i++) {
@@ -1071,19 +1094,19 @@ function mapArr(arr, fn) {
   return newArr;
 }
 
-// 創建一個以 arr1 為基準的數組 且新數組中每個成員都乘以 20
+// 創建一個以 arr1 為基準的陣列 且新陣列中每個成員都乘以 20
 var arr2 = mapArr(arr1, function (item) {
   return item * 20;
 });
 console.log(arr2);
 
-// 創建一個以 arr2 為基準的數組 且新數組中每個成員都除以 10
+// 創建一個以 arr2 為基準的陣列 且新陣列中每個成員都除以 10
 var arr3 = mapArr(arr2, function (item) {
   return item / 10;
 });
 console.log(arr3);
 
-// 創建一個函數 判斷數組中的成員是否大於傳入的數字
+// 創建一個函數 判斷陣列中的成員是否大於傳入的數字
 var checkNum = function (num, item) {
   return item > num;
 };
@@ -1100,7 +1123,7 @@ console.log(arr4);
 
 上述例子在 `lodash.js` 與 `underscore.js` 中 方法為 `map()`
 
-## 原型
+## part33 - 原型
 
 這裡指的是物件原型繼承 每個物件之間有原型鏈 類似於範圍鏈
 
@@ -1114,7 +1137,7 @@ js 中的每個物件都會有一個 `__proto__` 原型物件
 
 可以參考下列範例:
 
-```js
+```javascript=
 // 首先創建一個 obj
 var obj = {
   firstname: "default",
@@ -1148,15 +1171,15 @@ joe.getName();
 
 因為 js 本身就有屬於物件的 `__proto__` 原型物件
 
-其他諸如數組也有數組自己的原型鏈可以使用
+其他諸如陣列也有陣列自己的原型鏈可以使用
 
-## JS 的 Reflection and Extend
+## part34 - JS 的 Reflection and Extend
 
 `reflection` 是指我們可以遍歷一個物件中的所有屬性與屬性值
 
 如下:
 
-```js
+```javascript=
 var obj = {
   name: "Joe",
   age: 18,
@@ -1185,7 +1208,7 @@ for (var prop in obj2) {
 
 代碼如下:
 
-```js
+```javascript=
 var person = {
   fristname: "Joe",
   age: 18,
@@ -1233,7 +1256,7 @@ extend(person, obj2, fnObj);
 console.log(person);
 ```
 
-## 函數建構子 創建物件
+## part35 - 函數建構子 創建物件
 
 前面提過創建物件的方法有很多 這裡的函數建構子就是其中一種
 
@@ -1243,7 +1266,7 @@ console.log(person);
 
 如下:
 
-```js
+```javascript=
 function person() {
   this.name = "Joe";
   this.age = 18;
@@ -1273,7 +1296,7 @@ console.log(obj2); // person{ name: "Andy", age: 18}
 
 - 補充: 為了避免在使用函數建構子時忘記添加 `new` , 建議將所有函數建構子的名稱首字母統一大寫
 
-## Object.create 創建物件
+## part36 - Object.create 創建物件
 
 創建物件的方法還有這個 `Object.create` 它是通過原型繼承的方式創造物件的
 
@@ -1283,7 +1306,7 @@ console.log(obj2); // person{ name: "Andy", age: 18}
 
 參考代碼:
 
-```js
+```javascript=
 // 建立原型物件
 var Person = {
   firstName: "Default",
@@ -1300,7 +1323,7 @@ john.lastName = "Doe"; // Default 被 Doe 覆蓋
 console.log(john.getFullName()); // 找到原型的方法並取用
 ```
 
-## class 創建物件
+## part37 - class 創建物件
 
 class 是模仿 Java 等程式語言生成的 但與其他程式語言中的類別稍有不同
 
@@ -1308,7 +1331,7 @@ class 在 js 中也是用來定義原型物件的方式 並且它是 ES6 才出�
 
 使用方法如下:
 
-```js
+```javascript=
 // class 不會生成物件 使用 new 後才會生成物件
 class Person {
   // constructor 是 class 中的函數建構子
@@ -1321,13 +1344,13 @@ class Person {
 var john = new Person("John", "Doe");
 ```
 
-## `typeof` 與 `instanceof`
+## part38 - `typeof` 與 `instanceof`
 
 `typeof` 是用來判斷類型的 使用方式為 `typeof＋空格＋要判斷的東西`
 
 它會返回一個字符串 有以下結果:
 
-```js
+```javascript=
 var a = 123;
 console.log(typeof a); // number
 var b = "hi";
@@ -1350,11 +1373,11 @@ console.log(typeof h); // boolean
 
 - `typeof null` 為 `object` 是 js 的一個 bug 但已被長期使用 所以 js 沒有修正它
 
-`instanceof` 是用來檢查某個值是否為某 class 的實例物件或建構函式 使用方式為 `obj instanceof obj`
+`instanceof` 是用來檢查某個值是否為某 class 的實例物件或建構函數 使用方式為 `obj instanceof obj`
 
 它會返回布爾值 如下:
 
-```js
+```javascript=
 class Person {
   constructor(fristname, lastname) {
     this.fristname = fristname;
@@ -1372,7 +1395,7 @@ console.log(john instanceof Person); // true
 
 如下:
 
-```js
+```javascript=
 console.log(Object.prototype.toString.call("hi")); // [object String]
 console.log(Object.prototype.toString.call(1)); // [object Number]
 console.log(Object.prototype.toString.call(true)); // [object Boolean]
